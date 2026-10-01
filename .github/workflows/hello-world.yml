@@ -1,4 +1,4 @@
-name: exo 2
+name: exo2
 
 on:
   workflow_dispatch:

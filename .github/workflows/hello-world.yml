@@ -1,63 +1,33 @@
-name: CI/CD
+name: exo1
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Environnement"
-        type: choice
-        options:
-          - staging
-          - production
+  push:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: application
-          path: dist/
+      - uses: actions/checkout@v7
 
-  test:
-    needs: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        node: [20, 22]
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24.18.0
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
-      - uses: actions/download-artifact@v4
-        with:
-          name: application
-          path: dist/
+
       - run: npm test
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: application
-          path: dist/
-      - run: echo "API_URL = ${{ vars.API_URL }}"
-      - run: |
-          echo "## Déploiement" >> $GITHUB_STEP_SUMMARY
-          echo "- Cible : ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- URL : ${{ vars.API_URL }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit : $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+      - if: always()
+        run: |
+          echo "## Résultat de la CI" >> $GITHUB_STEP_SUMMARY
+          echo "- Statut du job : ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Ref : ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit : ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

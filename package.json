@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"tests ok\"",
-    "build": "cat dist/index.html"
+    "test": "node --test",
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",

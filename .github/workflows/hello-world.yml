@@ -1,22 +1,51 @@
-name: exo1
+name: exo 2
 
 on:
-  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  hello:
-    runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
       - uses: actions/setup-node@v7
         with:
           node-version: 24.18.0
+
       - uses: actions/cache@v5
         with:
           path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: npm-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
-      - run: npm test
-      - name: status
-        if: always()
-        run: echo "Status ${{ job.status }}"
+
+      - run: npm run build
+
+      - name: Vérifier le build
+        run: |
+          if [ ! -f dist/sum.js ]; then
+            echo "::error::dist/sum.js est introuvable, le build n'a rien produit"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build
+          path: dist/
+
+      - if: always()
+        run: |
+          echo "## Résumé du build" >> $GITHUB_STEP_SUMMARY
+          echo "- Statut : ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branche : ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit : ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Déclenché par : ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner : ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Date : $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          if [ -d dist ]; then
+            echo "- Fichiers dans dist/ : $(find dist -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -27,8 +27,8 @@ jobs:
 
       - name: Vérifier le build
         run: |
-          if [ ! -f dist/sum.js ]; then
-            echo "::error::dist/sum.js est introuvable, le build n'a rien produit"
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html est introuvable, le build n'a rien produit"
             exit 1
           fi
 
